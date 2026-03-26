@@ -16,7 +16,7 @@ class App extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Result',
+      title: 'Roomix',
       theme: AppTheme.light,
       initialRoute: dependencies.authRepository.isLoggedIn
           ? AppRoutes.home
