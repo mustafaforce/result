@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../auth/domain/usecases/get_current_auth_user.dart';
 import '../../../auth/domain/usecases/sign_out_user.dart';
 import '../../../../app/router/app_routes.dart';
 
@@ -8,11 +8,11 @@ class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
     required this.signOutUser,
-    required this.authRepository,
+    required this.getCurrentAuthUser,
   });
 
   final SignOutUser signOutUser;
-  final AuthRepository authRepository;
+  final GetCurrentAuthUser getCurrentAuthUser;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -51,14 +51,21 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.authRepository.currentUser;
-    final fullName = user?.userMetadata?['full_name'] as String?;
+    final user = widget.getCurrentAuthUser();
+    final fullName = user?.fullName;
     final email = user?.email ?? 'No email';
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.profile);
+            },
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Profile',
+          ),
           TextButton.icon(
             onPressed: _logout,
             icon: _isLoggingOut

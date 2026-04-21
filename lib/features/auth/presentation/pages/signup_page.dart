@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../domain/errors/auth_failure.dart';
 import '../../domain/usecases/sign_up_with_email.dart';
 import '../widgets/auth_card.dart';
 
@@ -69,7 +69,7 @@ class _SignUpPageState extends State<SignUpPage> {
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-    } on AuthException catch (e) {
+    } on AuthFailure catch (e) {
       if (!mounted) {
         return;
       }

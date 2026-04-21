@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../entities/auth_user.dart';
 
 abstract class AuthRepository {
   Future<bool> signUp({
@@ -12,5 +12,5 @@ abstract class AuthRepository {
   Future<void> signOut();
 
   bool get isLoggedIn;
-  User? get currentUser;
+  AuthUser? get currentUser;
 }

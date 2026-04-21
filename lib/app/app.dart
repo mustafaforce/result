@@ -18,7 +18,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Roomix',
       theme: AppTheme.light,
-      initialRoute: dependencies.authRepository.isLoggedIn
+      initialRoute: dependencies.isUserLoggedIn()
           ? AppRoutes.home
           : AppRoutes.login,
       onGenerateRoute: appRouter.onGenerateRoute,

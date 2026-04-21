@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../di/app_dependencies.dart';
 import 'app_routes.dart';
 import 'route_transition.dart';
@@ -28,7 +29,16 @@ class AppRouter {
         return RouteTransition.fadeSlide(
           HomePage(
             signOutUser: dependencies.signOutUser,
-            authRepository: dependencies.authRepository,
+            getCurrentAuthUser: dependencies.getCurrentAuthUser,
+          ),
+          settings,
+        );
+      case AppRoutes.profile:
+        return RouteTransition.fadeSlide(
+          ProfilePage(
+            getCurrentAuthUser: dependencies.getCurrentAuthUser,
+            getMyProfile: dependencies.getMyProfile,
+            upsertMyProfile: dependencies.upsertMyProfile,
           ),
           settings,
         );
