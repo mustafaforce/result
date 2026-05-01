@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../app/theme/app_colors.dart';
 
 class BasicInfoSection extends StatelessWidget {
   const BasicInfoSection({
@@ -24,7 +27,11 @@ class BasicInfoSection extends StatelessWidget {
           children: [
             Text(
               'Basic Information',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: GoogleFonts.manrope(
+                color: AppColors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(

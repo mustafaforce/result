@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../auth/domain/usecases/get_current_auth_user.dart';
+import '../../../matching/domain/entities/matching_preference.dart';
+import '../../../matching/domain/usecases/get_my_preferences.dart';
+import '../../../matching/domain/usecases/upsert_my_preferences.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/errors/profile_failure.dart';
 import '../../domain/usecases/get_my_profile.dart';
@@ -11,11 +14,15 @@ class ProfileFormController extends ChangeNotifier {
     required this.getCurrentAuthUser,
     required this.getMyProfile,
     required this.upsertMyProfile,
+    required this.getMyPreferences,
+    required this.upsertMyPreferences,
   });
 
   final GetCurrentAuthUser getCurrentAuthUser;
   final GetMyProfile getMyProfile;
   final UpsertMyProfile upsertMyProfile;
+  final GetMyPreferences getMyPreferences;
+  final UpsertMyPreferences upsertMyPreferences;
 
   final formKey = GlobalKey<FormState>();
   final fullNameController = TextEditingController();
@@ -27,6 +34,13 @@ class ProfileFormController extends ChangeNotifier {
   bool isSmoker = false;
   bool isNightOwl = false;
   int cleanliness = 3;
+
+  String studyHabit = 'moderate';
+  String guestFrequency = 'occasional';
+  int noiseTolerance = 3;
+  String sleepTime = 'flexible';
+  String sharingPreference = 'flexible';
+
   bool isLoading = true;
   bool isSaving = false;
 
@@ -58,10 +72,17 @@ class ProfileFormController extends ChangeNotifier {
       message = e.message;
     } catch (_) {
       message = 'Could not load profile.';
-    } finally {
-      isLoading = false;
-      notifyListeners();
     }
+
+    try {
+      final prefs = await getMyPreferences();
+      if (prefs != null) {
+        _applyMatchingPrefs(prefs);
+      }
+    } catch (_) {}
+
+    isLoading = false;
+    notifyListeners();
     return message;
   }
 
@@ -85,12 +106,21 @@ class ProfileFormController extends ChangeNotifier {
       cleanlinessLevel: cleanliness,
     );
 
+    final matchingPrefs = MatchingPreference(
+      studyHabit: studyHabit,
+      guestFrequency: guestFrequency,
+      noiseTolerance: noiseTolerance,
+      sleepTime: sleepTime,
+      sharingPreference: sharingPreference,
+    );
+
     isSaving = true;
     notifyListeners();
 
     String message;
     try {
       await upsertMyProfile(profile);
+      await upsertMyPreferences(matchingPrefs);
       message = 'Profile saved.';
     } on ProfileFailure catch (e) {
       message = e.message;
@@ -123,6 +153,31 @@ class ProfileFormController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setStudyHabit(String value) {
+    studyHabit = value;
+    notifyListeners();
+  }
+
+  void setGuestFrequency(String value) {
+    guestFrequency = value;
+    notifyListeners();
+  }
+
+  void setNoiseTolerance(double value) {
+    noiseTolerance = value.round();
+    notifyListeners();
+  }
+
+  void setSleepTime(String value) {
+    sleepTime = value;
+    notifyListeners();
+  }
+
+  void setSharingPreference(String value) {
+    sharingPreference = value;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     fullNameController.dispose();
@@ -142,6 +197,14 @@ class ProfileFormController extends ChangeNotifier {
     isSmoker = profile.isSmoker;
     isNightOwl = profile.isNightOwl;
     cleanliness = profile.cleanlinessLevel;
+  }
+
+  void _applyMatchingPrefs(MatchingPreference prefs) {
+    studyHabit = prefs.studyHabit;
+    guestFrequency = prefs.guestFrequency;
+    noiseTolerance = prefs.noiseTolerance;
+    sleepTime = prefs.sleepTime;
+    sharingPreference = prefs.sharingPreference;
   }
 
   String? _optionalText(String value) {

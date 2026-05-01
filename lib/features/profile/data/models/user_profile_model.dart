@@ -21,6 +21,20 @@ class UserProfileModel {
   final bool isNightOwl;
   final int cleanlinessLevel;
 
+  factory UserProfileModel.fromJson(Map<String, dynamic> json) {
+    final prefs = json['user_preferences'] as Map<String, dynamic>?;
+    return UserProfileModel(
+      fullName: (json['full_name'] as String?) ?? '',
+      department: json['department'] as String?,
+      academicYear: json['academic_year'] as int?,
+      monthlyBudget: (json['budget_max'] as num?)?.toDouble(),
+      bio: json['bio'] as String?,
+      isSmoker: (prefs?['is_smoker'] as bool?) ?? false,
+      isNightOwl: (prefs?['is_night_owl'] as bool?) ?? false,
+      cleanlinessLevel: (prefs?['cleanliness_level'] as int?) ?? 3,
+    );
+  }
+
   factory UserProfileModel.fromRows({
     required Map<String, dynamic> profileRow,
     required Map<String, dynamic>? preferencesRow,

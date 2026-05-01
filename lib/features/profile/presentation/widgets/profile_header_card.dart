@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../app/theme/app_colors.dart';
 
 class ProfileHeaderCard extends StatelessWidget {
   const ProfileHeaderCard({
@@ -21,11 +24,11 @@ class ProfileHeaderCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: const Color(0xFF1D8F6A),
+              backgroundColor: AppColors.midDark,
               child: Text(
                 avatarText,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: GoogleFonts.manrope(
+                  color: AppColors.green,
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
                 ),
@@ -38,12 +41,21 @@ class ProfileHeaderCard extends StatelessWidget {
                 children: [
                   Text(
                     fullName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: GoogleFonts.manrope(
+                      color: AppColors.white,
                       fontWeight: FontWeight.w700,
+                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(email, style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    email,
+                    style: GoogleFonts.manrope(
+                      color: AppColors.silver,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),

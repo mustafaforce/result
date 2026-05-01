@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/admin.dart';
 import 'di/app_dependencies.dart';
 import 'router/app_router.dart';
 import 'router/app_routes.dart';
@@ -14,13 +15,24 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     final appRouter = AppRouter(dependencies: dependencies);
 
+    final isLoggedIn = dependencies.isUserLoggedIn();
+    String initialRoute;
+    if (isLoggedIn) {
+      final user = dependencies.getCurrentAuthUser();
+      if (AdminConstants.isAdmin(user?.email)) {
+        initialRoute = AppRoutes.adminDashboard;
+      } else {
+        initialRoute = AppRoutes.home;
+      }
+    } else {
+      initialRoute = AppRoutes.login;
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Roomix',
-      theme: AppTheme.light,
-      initialRoute: dependencies.isUserLoggedIn()
-          ? AppRoutes.home
-          : AppRoutes.login,
+      theme: AppTheme.dark,
+      initialRoute: initialRoute,
       onGenerateRoute: appRouter.onGenerateRoute,
     );
   }

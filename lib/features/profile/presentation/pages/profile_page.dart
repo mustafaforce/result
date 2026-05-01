@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../auth/domain/usecases/get_current_auth_user.dart';
+import '../../../matching/domain/usecases/get_my_preferences.dart';
+import '../../../matching/domain/usecases/upsert_my_preferences.dart';
+import '../../../matching/presentation/widgets/matching_prefs_section.dart';
 import '../../domain/usecases/get_my_profile.dart';
 import '../../domain/usecases/upsert_my_profile.dart';
 import '../controllers/profile_form_controller.dart';
@@ -15,11 +18,15 @@ class ProfilePage extends StatefulWidget {
     required this.getCurrentAuthUser,
     required this.getMyProfile,
     required this.upsertMyProfile,
+    required this.getMyPreferences,
+    required this.upsertMyPreferences,
   });
 
   final GetCurrentAuthUser getCurrentAuthUser;
   final GetMyProfile getMyProfile;
   final UpsertMyProfile upsertMyProfile;
+  final GetMyPreferences getMyPreferences;
+  final UpsertMyPreferences upsertMyPreferences;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -35,6 +42,8 @@ class _ProfilePageState extends State<ProfilePage> {
       getCurrentAuthUser: widget.getCurrentAuthUser,
       getMyProfile: widget.getMyProfile,
       upsertMyProfile: widget.upsertMyProfile,
+      getMyPreferences: widget.getMyPreferences,
+      upsertMyPreferences: widget.upsertMyPreferences,
     );
     _load();
   }
@@ -72,76 +81,83 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, _) {
         return Scaffold(
           appBar: AppBar(title: const Text('Profile')),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFE9F8F1), Color(0xFFF7FCFA)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: SafeArea(
-              child: _controller.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Form(
-                        key: _controller.formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ProfileHeaderCard(
-                              fullName: _controller.displayName,
-                              email: _controller.email,
-                              avatarText: _controller.avatarText,
+          body: SafeArea(
+            child: _controller.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _controller.formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ProfileHeaderCard(
+                            fullName: _controller.displayName,
+                            email: _controller.email,
+                            avatarText: _controller.avatarText,
+                          ),
+                          const SizedBox(height: 14),
+                          BasicInfoSection(
+                            fullNameController:
+                                _controller.fullNameController,
+                            departmentController:
+                                _controller.departmentController,
+                            yearController: _controller.yearController,
+                            onFullNameChanged: _controller.onFullNameChanged,
+                          ),
+                          const SizedBox(height: 14),
+                          LifestyleSection(
+                            isSmoker: _controller.isSmoker,
+                            isNightOwl: _controller.isNightOwl,
+                            cleanliness: _controller.cleanliness,
+                            onSmokerChanged: _controller.setSmoker,
+                            onNightOwlChanged: _controller.setNightOwl,
+                            onCleanlinessChanged: _controller.setCleanliness,
+                          ),
+                          const SizedBox(height: 14),
+                          MatchingPrefsSection(
+                            studyHabit: _controller.studyHabit,
+                            guestFrequency: _controller.guestFrequency,
+                            noiseTolerance: _controller.noiseTolerance,
+                            sleepTime: _controller.sleepTime,
+                            sharingPreference: _controller.sharingPreference,
+                            onStudyHabitChanged: _controller.setStudyHabit,
+                            onGuestFrequencyChanged:
+                                _controller.setGuestFrequency,
+                            onNoiseToleranceChanged:
+                                _controller.setNoiseTolerance,
+                            onSleepTimeChanged: _controller.setSleepTime,
+                            onSharingPreferenceChanged:
+                                _controller.setSharingPreference,
+                          ),
+                          const SizedBox(height: 14),
+                          HousingSection(
+                            budgetController: _controller.budgetController,
+                            bioController: _controller.bioController,
+                          ),
+                          const SizedBox(height: 18),
+                          ElevatedButton.icon(
+                            onPressed: _controller.isSaving ? null : _save,
+                            icon: _controller.isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF121212),
+                                    ),
+                                  )
+                                : const Icon(Icons.save_outlined),
+                            label: Text(
+                              _controller.isSaving
+                                  ? 'Saving...'
+                                  : 'Save Profile',
                             ),
-                            const SizedBox(height: 14),
-                            BasicInfoSection(
-                              fullNameController:
-                                  _controller.fullNameController,
-                              departmentController:
-                                  _controller.departmentController,
-                              yearController: _controller.yearController,
-                              onFullNameChanged: _controller.onFullNameChanged,
-                            ),
-                            const SizedBox(height: 14),
-                            LifestyleSection(
-                              isSmoker: _controller.isSmoker,
-                              isNightOwl: _controller.isNightOwl,
-                              cleanliness: _controller.cleanliness,
-                              onSmokerChanged: _controller.setSmoker,
-                              onNightOwlChanged: _controller.setNightOwl,
-                              onCleanlinessChanged: _controller.setCleanliness,
-                            ),
-                            const SizedBox(height: 14),
-                            HousingSection(
-                              budgetController: _controller.budgetController,
-                              bioController: _controller.bioController,
-                            ),
-                            const SizedBox(height: 18),
-                            ElevatedButton.icon(
-                              onPressed: _controller.isSaving ? null : _save,
-                              icon: _controller.isSaving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_outlined),
-                              label: Text(
-                                _controller.isSaving
-                                    ? 'Saving...'
-                                    : 'Save Profile',
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-            ),
+                  ),
           ),
         );
       },

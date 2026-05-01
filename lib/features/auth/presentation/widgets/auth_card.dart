@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../app/theme/app_colors.dart';
 
 class AuthCard extends StatefulWidget {
   const AuthCard({
@@ -53,6 +56,12 @@ class _AuthCardState extends State<AuthCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Icon(
+                        Icons.meeting_room_rounded,
+                        color: AppColors.green,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 14),
                       Text(
                         widget.title,
                         style: Theme.of(context).textTheme.headlineSmall,
@@ -60,8 +69,10 @@ class _AuthCardState extends State<AuthCard> {
                       const SizedBox(height: 8),
                       Text(
                         widget.subtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF4F665D),
+                        style: GoogleFonts.manrope(
+                          color: AppColors.silver,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                       const SizedBox(height: 22),

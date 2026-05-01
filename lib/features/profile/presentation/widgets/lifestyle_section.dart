@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../app/theme/app_colors.dart';
 
 class LifestyleSection extends StatelessWidget {
   const LifestyleSection({
@@ -28,25 +31,47 @@ class LifestyleSection extends StatelessWidget {
           children: [
             Text(
               'Lifestyle Preferences',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: GoogleFonts.manrope(
+                color: AppColors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Smoker'),
+              title: Text(
+                'Smoker',
+                style: GoogleFonts.manrope(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                ),
+              ),
               value: isSmoker,
               onChanged: onSmokerChanged,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Night Owl'),
+              title: Text(
+                'Night Owl',
+                style: GoogleFonts.manrope(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                ),
+              ),
               value: isNightOwl,
               onChanged: onNightOwlChanged,
             ),
             const SizedBox(height: 8),
             Text(
               'Cleanliness Level: $cleanliness / 5',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: GoogleFonts.manrope(
+                color: AppColors.silver,
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+              ),
             ),
             Slider(
               min: 1,
