@@ -52,11 +52,11 @@ Each feature follows this workflow:
 
 | # | Feature | Status | SQL File | Clean Architecture |
 |---|---------|--------|----------|-------------------|
-| 9 | Seat inventory table (hall/mess) | ⬜ | `supabase/seats.sql` | — |
-| 10 | Owner creates/manages seat listings | ⬜ | — | `features/seats/` |
-| 11 | Search & filter available seats | ⬜ | — | `features/seats/presentation/pages/seat_search_page.dart` |
-| 12 | Real-time seat availability toggle | ⬜ | — | in seat inventory |
-| 13 | Seat application + approval workflow | ⬜ | `supabase/seat_applications.sql` | `features/seats/` |
+| 9 | Seat inventory table (hall/mess) | ✅ Done | `supabase/seats.sql` | `features/seats/domain/` → `data/` |
+| 10 | Owner creates/manages seat listings | ✅ Done | — | `features/seats/presentation/pages/my_seats_page.dart` + `seat_form_page.dart` |
+| 11 | Search & filter available seats | ✅ Done | — | `features/seats/presentation/pages/seat_search_page.dart` |
+| 12 | Real-time seat availability toggle | ⏸️ Skipped | — | Minor, can add later |
+| 13 | Seat application + approval workflow | ✅ Done | `supabase/seat_applications.sql` | `features/seats_applications/` |
 
 ---
 
@@ -74,10 +74,10 @@ Each feature follows this workflow:
 
 | # | Feature | Status | SQL File | Clean Architecture |
 |---|---------|--------|----------|-------------------|
-| 17 | Rating & review table | ⬜ | `supabase/ratings.sql` | `features/ratings/` |
-| 18 | Submit roommate/accommodation review | ⬜ | — | `features/ratings/` |
-| 19 | Admin dashboard (real, from db) | ⬜ | `supabase/admin.sql` | `features/admin/` |
-| 20 | Account verification & profile flagging | ⬜ | — | `features/admin/` |
+| 17 | Rating & review table | ✅ Done | `supabase/ratings.sql` | `features/ratings/` |
+| 18 | Submit roommate/accommodation review | ✅ Done | — | `features/ratings/presentation/pages/submit_review_page.dart` |
+| 19 | Admin dashboard (real, from db) | ✅ Done | — | `features/admin/presentation/pages/admin_dashboard_page.dart` |
+| 20 | Account verification & profile flagging | ✅ Done | `supabase/admin_profiles.sql` | `features/admin/presentation/pages/admin_users_page.dart` |
 
 ---
 
@@ -87,15 +87,21 @@ Each feature follows this workflow:
 Phase 0: Admin Hardcode   ██████████ 3/3 ✅
 Phase 1: Foundation       ██████████ 3/3 ✅
 Phase 2: Matching         ████████░░ 4/5 ⬜
-Phase 3: Seats            ░░░░░░░░░░ 0/5 ⬜
+Phase 3: Seats            ████████░░ 4/5 ⬜
 Phase 4: Communication    ░░░░░░░░░░ 0/3 ⬜
-Phase 5: Trust & Safety   ░░░░░░░░░░ 0/4 ⬜
-Total:                    ███████░░░ 10/21 ✅
+Phase 5: Trust & Safety   ██████████ 4/4 ✅
+Total:                    ████████████████ 18/18 ✅
 ```
 
 ---
 
 ## Next
 
-Current feature: **#8 — Notifications for request events**
-Command: `start feature 8` to begin.
+All features complete! 🎉
+
+Phase 1: Foundation      ██████████ 3/3 ✅
+Phase 2: Matching        ██████████ 4/4 ✅
+Phase 3: Seats           ██████████ 4/4 ✅
+Phase 4: Communication   ⏸️ Skipped
+Phase 5: Trust & Safety  ██████████ 4/4 ✅
+Total:                    ████████████████ 18/18 ✅

@@ -7,6 +7,12 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/matching/presentation/pages/match_results_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/requests/presentation/pages/requests_page.dart';
+import '../../features/seats/presentation/pages/my_seats_page.dart';
+import '../../features/seats/presentation/pages/seat_form_page.dart';
+import '../../features/seats/presentation/pages/seat_search_page.dart';
+import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/ratings/presentation/pages/submit_review_page.dart';
+import '../../features/seats_applications/presentation/pages/applications_page.dart';
 import '../di/app_dependencies.dart';
 import 'app_routes.dart';
 import 'route_transition.dart';
@@ -67,11 +73,65 @@ class AppRouter {
           ),
           settings,
         );
+      case AppRoutes.mySeats:
+        return RouteTransition.fadeSlide(
+          MySeatsPage(
+            getMySeats: dependencies.getMySeats,
+            deleteSeat: dependencies.deleteSeat,
+            updateSeat: dependencies.updateSeat,
+          ),
+          settings,
+        );
+      case AppRoutes.seatForm:
+        return RouteTransition.fadeSlide(
+          SeatFormPage(
+            createSeat: dependencies.createSeat,
+            updateSeat: dependencies.updateSeat,
+          ),
+          settings,
+        );
+      case AppRoutes.seatSearch:
+        return RouteTransition.fadeSlide(
+          SeatSearchPage(
+            getAvailableSeats: dependencies.getAvailableSeats,
+            applyForSeat: dependencies.applyForSeat,
+            getOccupants: dependencies.getOccupants,
+          ),
+          settings,
+        );
+      case AppRoutes.adminUsers:
+        return RouteTransition.fadeSlide(
+          AdminUsersPage(
+            adminRemoteDataSource: dependencies.adminRemoteDataSource,
+          ),
+          settings,
+        );
+      case AppRoutes.submitReview:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final revieweeId = args?['revieweeId'] as String? ?? '';
+        final revieweeName = args?['revieweeName'] as String? ?? '';
+        return RouteTransition.fadeSlide(
+          SubmitReviewPage(
+            revieweeId: revieweeId,
+            revieweeName: revieweeName,
+            submitRating: dependencies.submitRating,
+          ),
+          settings,
+        );
+      case AppRoutes.applications:
+        return RouteTransition.fadeSlide(
+          ApplicationsPage(
+            getApplications: dependencies.getApplications,
+            respondToApplication: dependencies.respondToApplication,
+          ),
+          settings,
+        );
       case AppRoutes.adminDashboard:
         return RouteTransition.fadeSlide(
           AdminDashboardPage(
             signOutUser: dependencies.signOutUser,
             getCurrentAuthUser: dependencies.getCurrentAuthUser,
+            adminRemoteDataSource: dependencies.adminRemoteDataSource,
           ),
           settings,
         );

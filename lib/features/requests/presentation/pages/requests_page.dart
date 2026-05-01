@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../domain/entities/roommate_request.dart';
 import '../../domain/usecases/get_my_requests.dart';
@@ -182,6 +183,38 @@ class _RequestsPageState extends State<RequestsPage>
                 ],
               ),
             ),
+            if (!isSent && req.isAccepted)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GestureDetector(
+                  onTap: () async {
+                    await Navigator.of(context).pushNamed(
+                      AppRoutes.submitReview,
+                      arguments: {
+                        'revieweeId': req.fromUserId,
+                        'revieweeName': name,
+                      },
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.warningOrange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(500),
+                    ),
+                    child: Text(
+                      'RATE',
+                      style: GoogleFonts.manrope(
+                        color: AppColors.warningOrange,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             if (!isSent && req.isPending)
               Row(
                 mainAxisSize: MainAxisSize.min,

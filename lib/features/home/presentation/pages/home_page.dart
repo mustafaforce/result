@@ -5,6 +5,7 @@ import '../../../auth/domain/usecases/get_current_auth_user.dart';
 import '../../../auth/domain/usecases/sign_out_user.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/constants/admin.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -59,6 +60,8 @@ class _HomePageState extends State<HomePage> {
     final initials = (fullName ?? 'U').isNotEmpty
         ? (fullName ?? 'U')[0].toUpperCase()
         : 'U';
+
+    final isAdmin = AdminConstants.isAdmin(user?.email);
 
     return Scaffold(
       body: SafeArea(
@@ -195,7 +198,11 @@ class _HomePageState extends State<HomePage> {
             _navItem(Icons.people_rounded, 'Matches', false, () {
               Navigator.of(context).pushNamed(AppRoutes.matchResults);
             }),
-            _navItem(Icons.event_seat_rounded, 'Seats', false, null),
+            _navItem(Icons.event_seat_rounded, 'Seats', false, () {
+              Navigator.of(context).pushNamed(
+                isAdmin ? AppRoutes.mySeats : AppRoutes.seatSearch,
+              );
+            }),
             _navItem(Icons.message_rounded, 'Requests', false, () {
               Navigator.of(context).pushNamed(AppRoutes.requests);
             }),

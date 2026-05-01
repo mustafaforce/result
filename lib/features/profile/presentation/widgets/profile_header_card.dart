@@ -9,11 +9,13 @@ class ProfileHeaderCard extends StatelessWidget {
     required this.fullName,
     required this.email,
     required this.avatarText,
+    this.isVerified = false,
   });
 
   final String fullName;
   final String email;
   final String avatarText;
+  final bool isVerified;
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +41,22 @@ class ProfileHeaderCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    fullName,
-                    style: GoogleFonts.manrope(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        fullName,
+                        style: GoogleFonts.manrope(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
+                      ),
+                      if (isVerified) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.verified_rounded,
+                            color: AppColors.announcementBlue, size: 18),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
