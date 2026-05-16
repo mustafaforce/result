@@ -119,12 +119,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.manrope(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.manrope(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -139,6 +143,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                 if (user['department'] != null)
                   Text(
                     user['department'] as String,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       color: AppColors.silver,
                       fontWeight: FontWeight.w400,
