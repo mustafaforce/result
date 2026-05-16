@@ -16,7 +16,7 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
     } on ApplicationFailure {
       rethrow;
     } catch (e) {
-      throw const ApplicationFailure('Failed to apply.');
+      throw ApplicationFailure(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -58,6 +58,40 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
           .toList();
     } catch (e) {
       throw const ApplicationFailure('Failed to load applications.');
+    }
+  }
+
+  @override
+  Future<List<SeatApplication>> getAllApplications({
+    bool pendingOnly = false,
+  }) async {
+    try {
+      final rows = await _remoteDataSource.getAllApplications(
+        pendingOnly: pendingOnly,
+      );
+      return rows
+          .map((r) => SeatApplicationModel.fromJson(r).toEntity())
+          .toList();
+    } catch (e) {
+      throw const ApplicationFailure('Failed to load applications.');
+    }
+  }
+
+  @override
+  Future<bool> hasActiveApplication() async {
+    try {
+      return await _remoteDataSource.hasActiveApplication();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<List<String>> getMyAppliedSeatIds() async {
+    try {
+      return await _remoteDataSource.getMyAppliedSeatIds();
+    } catch (_) {
+      return [];
     }
   }
 }

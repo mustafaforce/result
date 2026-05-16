@@ -145,6 +145,29 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                       fontSize: 12,
                     ),
                   ),
+                Builder(builder: (_) {
+                  final seat =
+                      user['assigned_seat'] as Map<String, dynamic>?;
+                  if (seat == null) {
+                    return Text(
+                      'No room assigned',
+                      style: GoogleFonts.manrope(
+                        color: AppColors.silver,
+                        fontSize: 11,
+                      ),
+                    );
+                  }
+                  final hall = seat['hall_name'] as String? ?? '';
+                  final number = seat['seat_number'] as String?;
+                  return Text(
+                    number == null ? hall : '$hall · Seat $number',
+                    style: GoogleFonts.manrope(
+                      color: AppColors.green,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  );
+                }),
               ],
             ),
           ),

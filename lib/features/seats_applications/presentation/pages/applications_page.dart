@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/constants/admin.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../domain/entities/seat_application.dart';
 import '../../domain/usecases/get_applications.dart';
 import '../../domain/usecases/respond_to_application.dart';
@@ -22,39 +24,56 @@ class ApplicationsPage extends StatefulWidget {
 
 class _ApplicationsPageState extends State<ApplicationsPage>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+  TabController? _tabController;
   final _mine = <SeatApplication>[];
-  final _forMySeats = <SeatApplication>[];
+  final _adminAll = <SeatApplication>[];
   bool _isLoading = true;
+  late final bool _isAdmin;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    final email = SupabaseService.client.auth.currentUser?.email;
+    _isAdmin = AdminConstants.isAdmin(email);
+    _tabController = TabController(
+      length: _isAdmin ? 2 : 1,
+      vsync: this,
+    );
     _load();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
-      final mine = await widget.getApplications.mine();
-      final forMySeats = await widget.getApplications.forMySeats();
-      if (!mounted) return;
-      setState(() {
-        _mine
-          ..clear()
-          ..addAll(mine);
-        _forMySeats
-          ..clear()
-          ..addAll(forMySeats);
-        _isLoading = false;
-      });
+      if (_isAdmin) {
+        final pending = await widget.getApplications.all(pendingOnly: true);
+        final all = await widget.getApplications.all();
+        if (!mounted) return;
+        setState(() {
+          _mine
+            ..clear()
+            ..addAll(pending);
+          _adminAll
+            ..clear()
+            ..addAll(all);
+          _isLoading = false;
+        });
+      } else {
+        final mine = await widget.getApplications.mine();
+        if (!mounted) return;
+        setState(() {
+          _mine
+            ..clear()
+            ..addAll(mine);
+          _isLoading = false;
+        });
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -77,40 +96,44 @@ class _ApplicationsPageState extends State<ApplicationsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Applications'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.green,
-          unselectedLabelColor: AppColors.silver,
-          indicatorColor: AppColors.green,
-          labelStyle: GoogleFonts.manrope(
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            letterSpacing: 1.4,
-          ),
-          tabs: [
-            Tab(text: 'MY APPS (${_mine.length})'),
-            Tab(text: 'RECEIVED (${_forMySeats.length})'),
-          ],
-        ),
+        title: Text(_isAdmin ? 'Admin · Applications' : 'My Applications'),
+        bottom: _isAdmin
+            ? TabBar(
+                controller: _tabController,
+                labelColor: AppColors.green,
+                unselectedLabelColor: AppColors.silver,
+                indicatorColor: AppColors.green,
+                labelStyle: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: 1.4,
+                ),
+                tabs: [
+                  Tab(text: 'PENDING (${_mine.length})'),
+                  Tab(text: 'ALL (${_adminAll.length})'),
+                ],
+              )
+            : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _list(_mine, isOwner: false),
-                _list(_forMySeats, isOwner: true),
-              ],
-            ),
+          : _isAdmin
+              ? TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _list(_mine, adminCanAct: true),
+                    _list(_adminAll, adminCanAct: false),
+                  ],
+                )
+              : _list(_mine, adminCanAct: false),
     );
   }
 
-  Widget _list(List<SeatApplication> apps, {required bool isOwner}) {
+  Widget _list(List<SeatApplication> apps, {required bool adminCanAct}) {
     if (apps.isEmpty) {
       return Center(
         child: Text(
-          isOwner ? 'No applications received' : 'No applications yet',
+          _isAdmin ? 'No applications' : 'No applications yet',
           style: GoogleFonts.manrope(
             color: AppColors.silver,
             fontWeight: FontWeight.w400,
@@ -120,20 +143,31 @@ class _ApplicationsPageState extends State<ApplicationsPage>
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: apps.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _card(apps[i], isOwner),
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: apps.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (_, i) => _card(apps[i], adminCanAct),
+      ),
     );
   }
 
-  Widget _card(SeatApplication app, bool isOwner) {
-    final title = isOwner
-        ? (app.applicantName ?? 'Unknown')
-        : (app.seatTitle ?? 'Unknown');
+  Widget _card(SeatApplication app, bool adminCanAct) {
+    final primary = _isAdmin
+        ? (app.applicantName ?? 'Unknown applicant')
+        : (app.seatTitle ?? 'Unknown seat');
+    final secondary = _isAdmin
+        ? (app.seatTitle ?? '')
+        : (app.hallName ?? '');
 
-    return Container(
+    return GestureDetector(
+      onTap: _isAdmin
+          ? () => _showApplicantProfile(app.applicantId,
+              app.applicantName ?? 'Applicant')
+          : null,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(8),
@@ -152,7 +186,7 @@ class _ApplicationsPageState extends State<ApplicationsPage>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    isOwner ? Icons.person_rounded : Icons.event_seat_rounded,
+                    _isAdmin ? Icons.person_rounded : Icons.event_seat_rounded,
                     color: AppColors.green,
                     size: 22,
                   ),
@@ -163,17 +197,17 @@ class _ApplicationsPageState extends State<ApplicationsPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        primary,
                         style: GoogleFonts.manrope(
                           color: AppColors.white,
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
                       ),
-                      if (app.seatTitle != null && isOwner) ...[
+                      if (secondary.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
-                          app.seatTitle!,
+                          secondary,
                           style: GoogleFonts.manrope(
                             color: AppColors.silver,
                             fontWeight: FontWeight.w400,
@@ -187,7 +221,7 @@ class _ApplicationsPageState extends State<ApplicationsPage>
                 _statusChip(app.status),
               ],
             ),
-            if (isOwner && app.isPending) ...[
+            if (adminCanAct && app.isPending) ...[
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -238,6 +272,162 @@ class _ApplicationsPageState extends State<ApplicationsPage>
             ],
           ],
         ),
+      ),
+    ),
+    );
+  }
+
+  Future<void> _showApplicantProfile(String userId, String name) async {
+    Map<String, dynamic>? profile;
+    try {
+      profile = await SupabaseService.client
+          .from('profiles')
+          .select('*, user_preferences (*), matching_preferences (*)')
+          .eq('id', userId)
+          .maybeSingle();
+    } catch (_) {
+      profile = null;
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkSurface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (_) {
+        if (profile == null) {
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Could not load profile',
+                style: GoogleFonts.manrope(
+                    color: AppColors.silver, fontSize: 14)),
+          );
+        }
+        final p = profile;
+        final up = p['user_preferences'] as Map<String, dynamic>?;
+        final mp = p['matching_preferences'] as Map<String, dynamic>?;
+        final fullName = (p['full_name'] as String?) ?? name;
+        final department = p['department'] as String?;
+        final year = p['academic_year'];
+        final budget = p['budget_max'];
+        final bio = p['bio'] as String?;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: AppColors.midDark,
+                        child: Text(
+                          fullName.isNotEmpty
+                              ? fullName[0].toUpperCase()
+                              : '?',
+                          style: GoogleFonts.manrope(
+                              color: AppColors.green,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(fullName,
+                                style: GoogleFonts.manrope(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18)),
+                            if (department != null)
+                              Text(department,
+                                  style: GoogleFonts.manrope(
+                                      color: AppColors.silver,
+                                      fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _row('Academic Year',
+                      year == null ? '—' : 'Year $year'),
+                  _row('Budget',
+                      budget == null ? '—' : 'BDT $budget / mo'),
+                  if (bio != null && bio.isNotEmpty) _row('Bio', bio),
+                  const SizedBox(height: 8),
+                  if (up != null) ...[
+                    Text('Lifestyle',
+                        style: GoogleFonts.manrope(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14)),
+                    const SizedBox(height: 6),
+                    _row('Smoker',
+                        (up['is_smoker'] as bool? ?? false) ? 'Yes' : 'No'),
+                    _row('Night owl',
+                        (up['is_night_owl'] as bool? ?? false) ? 'Yes' : 'No'),
+                    _row('Cleanliness',
+                        '${up['cleanliness_level'] ?? '—'} / 5'),
+                  ],
+                  if (mp != null) ...[
+                    const SizedBox(height: 12),
+                    Text('Matching Preferences',
+                        style: GoogleFonts.manrope(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14)),
+                    const SizedBox(height: 6),
+                    _row('Study habit',
+                        (mp['study_habit'] as String?) ?? '—'),
+                    _row('Guest frequency',
+                        (mp['guest_frequency'] as String?) ?? '—'),
+                    _row('Sleep time',
+                        (mp['sleep_time'] as String?) ?? '—'),
+                    _row('Sharing',
+                        (mp['sharing_preference'] as String?) ?? '—'),
+                    _row('Noise tolerance',
+                        '${mp['noise_tolerance'] ?? '—'} / 5'),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _row(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(label,
+                style: GoogleFonts.manrope(
+                    color: AppColors.silver, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: GoogleFonts.manrope(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13)),
+          ),
+        ],
       ),
     );
   }

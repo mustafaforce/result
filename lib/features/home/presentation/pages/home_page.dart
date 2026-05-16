@@ -195,17 +195,24 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _navItem(Icons.home_rounded, 'Home', true, null),
-            _navItem(Icons.people_rounded, 'Matches', false, () {
-              Navigator.of(context).pushNamed(AppRoutes.matchResults);
-            }),
+            // Matches feature disabled — algorithmic matching not part of
+            // current flow. Admin approves seats; users do not match peer-to-peer.
+            // _navItem(Icons.people_rounded, 'Matches', false, () {
+            //   Navigator.of(context).pushNamed(AppRoutes.matchResults);
+            // }),
             _navItem(Icons.event_seat_rounded, 'Seats', false, () {
               Navigator.of(context).pushNamed(
                 isAdmin ? AppRoutes.mySeats : AppRoutes.seatSearch,
               );
             }),
-            _navItem(Icons.message_rounded, 'Requests', false, () {
-              Navigator.of(context).pushNamed(AppRoutes.requests);
+            _navItem(Icons.assignment_rounded, 'Apps', false, () {
+              Navigator.of(context).pushNamed(AppRoutes.applications);
             }),
+            // Roommate-request (user-to-user) flow disabled — admin-mediated
+            // seat approval replaces peer requests.
+            // _navItem(Icons.message_rounded, 'Requests', false, () {
+            //   Navigator.of(context).pushNamed(AppRoutes.requests);
+            // }),
             _navItem(Icons.person_rounded, 'Profile', false, () {
               Navigator.of(context).pushNamed(AppRoutes.profile);
             }),

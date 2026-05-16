@@ -27,6 +27,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _totalUsers = 0;
   int _totalSeats = 0;
   int _pendingSeatApps = 0;
+  int _totalCapacity = 0;
+  int _freeSpots = 0;
   List<Map<String, dynamic>> _recentUsers = [];
   bool _isLoading = true;
 
@@ -43,15 +45,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         widget.adminRemoteDataSource.getUserCount(),
         widget.adminRemoteDataSource.getSeatCount(),
         widget.adminRemoteDataSource.getPendingSeatApplications(),
-        // widget.adminRemoteDataSource.getPendingRoommateRequests(),
         widget.adminRemoteDataSource.getRecentUsers(),
+        widget.adminRemoteDataSource.getCapacityStats(),
       ]);
       if (!mounted) return;
+      final stats = results[4] as ({int total, int occupied, int free});
       setState(() {
         _totalUsers = results[0] as int;
         _totalSeats = results[1] as int;
         _pendingSeatApps = results[2] as int;
         _recentUsers = results[3] as List<Map<String, dynamic>>;
+        _totalCapacity = stats.total;
+        _freeSpots = stats.free;
         _isLoading = false;
       });
     } catch (_) {
@@ -148,10 +153,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         Icons.assignment_rounded, AppColors.warningOrange, () {
                       Navigator.of(context).pushNamed(AppRoutes.applications);
                     }),
-                    _statCard('Free Spots', '$_totalSeats',
+                    _statCard(
+                        'Free Spots',
+                        '$_freeSpots / $_totalCapacity',
                         Icons.airline_seat_recline_normal_rounded,
                         AppColors.green, () {
-                      Navigator.of(context).pushNamed(AppRoutes.mySeats);
+                      Navigator.of(context)
+                          .pushNamed(AppRoutes.adminFreeSpots);
                     }),
                   ],
                 ),
@@ -174,6 +182,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               const SizedBox(height: 8),
                           itemBuilder: (_, i) {
                             final u = _recentUsers[i];
+                            final name =
+                                u['full_name'] as String? ?? 'Unknown';
+                            final seat =
+                                u['assigned_seat'] as Map<String, dynamic>?;
+                            final hall = seat?['hall_name'] as String?;
+                            final seatNumber =
+                                seat?['seat_number'] as String?;
+                            final roomLabel = seat == null
+                                ? 'No room assigned'
+                                : seatNumber == null
+                                    ? (hall ?? 'Assigned')
+                                    : '${hall ?? ''} · Seat $seatNumber';
                             return Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -186,12 +206,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     radius: 16,
                                     backgroundColor: AppColors.midDark,
                                     child: Text(
-                                      ((u['full_name'] as String?)
-                                                  ?.isNotEmpty ==
-                                              true
-                                          ? (u['full_name'] as String)[0]
-                                              .toUpperCase()
-                                          : '?'),
+                                      name.isNotEmpty
+                                          ? name[0].toUpperCase()
+                                          : '?',
                                       style: GoogleFonts.manrope(
                                           color: AppColors.green,
                                           fontWeight: FontWeight.w700,
@@ -199,12 +216,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  Text(
-                                    u['full_name'] as String? ?? 'Unknown',
-                                    style: GoogleFonts.manrope(
-                                        color: AppColors.white,
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: GoogleFonts.manrope(
+                                              color: AppColors.white,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 14),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          roomLabel,
+                                          style: GoogleFonts.manrope(
+                                              color: seat == null
+                                                  ? AppColors.silver
+                                                  : AppColors.green,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 11),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),

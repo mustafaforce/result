@@ -8,6 +8,7 @@ import '../../../matching/domain/services/compatibility_scorer.dart';
 import '../../../matching/domain/entities/matching_preference.dart';
 import '../../../profile/domain/entities/user_profile.dart';
 import '../../../seats_applications/domain/usecases/apply_for_seat.dart';
+import '../../../seats_applications/domain/usecases/get_applications.dart';
 import '../../domain/entities/seat.dart';
 import '../../domain/usecases/get_available_seats.dart';
 import '../../domain/usecases/get_occupants.dart';
@@ -18,11 +19,13 @@ class SeatSearchPage extends StatefulWidget {
     required this.getAvailableSeats,
     required this.applyForSeat,
     required this.getOccupants,
+    required this.getApplications,
   });
 
   final GetAvailableSeats getAvailableSeats;
   final ApplyForSeat applyForSeat;
   final GetOccupants getOccupants;
+  final GetApplications getApplications;
 
   @override
   State<SeatSearchPage> createState() => _SeatSearchPageState();
@@ -34,6 +37,7 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
   List<Seat> _allSeats = [];
   List<Seat> _filteredSeats = [];
   bool _isLoading = true;
+  bool _hasActiveApp = false;
 
   @override
   void initState() {
@@ -51,10 +55,16 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
     setState(() => _isLoading = true);
     try {
       final seats = await widget.getAvailableSeats();
+      final appliedIds = await widget.getApplications.myAppliedSeatIds();
+      final hasActive = await widget.getApplications.hasActive();
       if (!mounted) return;
       setState(() {
         _allSeats = seats;
         _filteredSeats = seats;
+        _appliedSeatIds
+          ..clear()
+          ..addAll(appliedIds);
+        _hasActiveApp = hasActive;
         _isLoading = false;
       });
     } catch (_) {
@@ -164,14 +174,24 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
     try {
       await widget.applyForSeat(seatId: seatId);
       if (!mounted) return;
-      setState(() => _appliedSeatIds.add(seatId));
+      setState(() {
+        _appliedSeatIds.add(seatId);
+        _hasActiveApp = true;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Application submitted!')),
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to apply')),
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', '').replaceFirst(
+                  'ApplicationFailure: ',
+                  '',
+                ),
+          ),
+        ),
       );
     }
   }
@@ -300,48 +320,72 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: AppColors.midDark,
-                        child: Text(name[0].toUpperCase(),
-                            style: GoogleFonts.manrope(
-                                color: AppColors.green,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14)),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(name,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _showOccupantDetail(
+                          name: name,
+                          dept: dept,
+                          profileJson: p,
+                          myProfile: myProfile,
+                          myPrefs: myPrefs,
+                          theirProfile: theirProfile,
+                          theirPrefs: theirPrefs,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.midDark,
+                            child: Text(
+                                name.isNotEmpty
+                                    ? name[0].toUpperCase()
+                                    : '?',
                                 style: GoogleFonts.manrope(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.green,
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 14)),
-                            if (dept.isNotEmpty)
-                              Text(dept,
-                                  style: GoogleFonts.manrope(
-                                      color: AppColors.silver,
-                                      fontSize: 12)),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(name,
+                                    style: GoogleFonts.manrope(
+                                        color: AppColors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14)),
+                                if (dept.isNotEmpty)
+                                  Text(dept,
+                                      style: GoogleFonts.manrope(
+                                          color: AppColors.silver,
+                                          fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: scoreColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('${score.round()}%',
+                                style: GoogleFonts.manrope(
+                                    color: scoreColor,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12)),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.chevron_right_rounded,
+                              color: AppColors.silver, size: 18),
+                        ]),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: scoreColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text('${score.round()}%',
-                            style: GoogleFonts.manrope(
-                                color: scoreColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12)),
-                      ),
-                    ]),
+                    ),
                   );
                 }),
             ],
@@ -351,10 +395,204 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
     } catch (_) {}
   }
 
+  Future<void> _showOccupantDetail({
+    required String name,
+    required String dept,
+    required Map<String, dynamic>? profileJson,
+    required UserProfile myProfile,
+    required MatchingPreference myPrefs,
+    required UserProfile theirProfile,
+    required MatchingPreference theirPrefs,
+  }) async {
+    final scorer = CompatibilityScorer();
+    final result = scorer.scoreWithBreakdown(
+      myProfile: myProfile,
+      myPreferences: myPrefs,
+      theirProfile: theirProfile,
+      theirPreferences: theirPrefs,
+    );
+    final overall = result.overall;
+    final scoreColor = overall >= 75
+        ? AppColors.green
+        : overall >= 50
+            ? AppColors.warningOrange
+            : AppColors.negativeRed;
+    final year = profileJson?['academic_year'];
+    final bio = profileJson?['bio'] as String?;
+
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkSurface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundColor: AppColors.midDark,
+                        child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                            style: GoogleFonts.manrope(
+                                color: AppColors.green,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20)),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name,
+                                style: GoogleFonts.manrope(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20)),
+                            if (dept.isNotEmpty)
+                              Text(dept,
+                                  style: GoogleFonts.manrope(
+                                      color: AppColors.silver,
+                                      fontSize: 13)),
+                            if (year != null)
+                              Text('Year $year',
+                                  style: GoogleFonts.manrope(
+                                      color: AppColors.silver,
+                                      fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: scoreColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(500),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('${overall.round()}%',
+                                style: GoogleFonts.manrope(
+                                    color: scoreColor,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18)),
+                            Text('MATCH',
+                                style: GoogleFonts.manrope(
+                                    color: scoreColor,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 9,
+                                    letterSpacing: 1.4)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (bio != null && bio.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Text(bio,
+                        style: GoogleFonts.manrope(
+                            color: AppColors.silver,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 13)),
+                  ],
+                  const SizedBox(height: 18),
+                  Text('Compatibility breakdown',
+                      style: GoogleFonts.manrope(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14)),
+                  const SizedBox(height: 8),
+                  ...result.traits.map(_traitRow),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _traitRow(TraitScore t) {
+    final color = t.matchPercent >= 75
+        ? AppColors.green
+        : t.matchPercent >= 50
+            ? AppColors.warningOrange
+            : AppColors.negativeRed;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(t.label,
+                    style: GoogleFonts.manrope(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+              ),
+              Text('${t.matchPercent.round()}%',
+                  style: GoogleFonts.manrope(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text('You: ${t.mine}',
+                    style: GoogleFonts.manrope(
+                        color: AppColors.silver, fontSize: 11)),
+              ),
+              Expanded(
+                child: Text('Them: ${t.theirs}',
+                    style: GoogleFonts.manrope(
+                        color: AppColors.silver, fontSize: 11)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: t.matchPercent / 100,
+              minHeight: 4,
+              backgroundColor: AppColors.midDark,
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _seatCard(Seat seat) {
     final alreadyApplied = _appliedSeatIds.contains(seat.id);
     final filled = seat.occupantCount;
     final remaining = seat.capacity - filled;
+    final isFull = remaining <= 0;
+    final blockedByActiveApp = _hasActiveApp && !alreadyApplied;
+    final disabled = alreadyApplied || isFull || blockedByActiveApp;
+    final buttonLabel = alreadyApplied
+        ? 'APPLIED'
+        : isFull
+            ? 'FULL'
+            : blockedByActiveApp
+                ? 'ACTIVE APP EXISTS'
+                : 'APPLY FOR SEAT';
     return Container(
       decoration: BoxDecoration(
         color: AppColors.darkSurface,
@@ -478,25 +716,45 @@ class _SeatSearchPageState extends State<SeatSearchPage> {
                 ],
               ),
             ],
+            if (filled > 0) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showOccupants(seat),
+                  icon: Icon(Icons.people_alt_rounded,
+                      color: AppColors.announcementBlue, size: 18),
+                  label: Text(
+                    'VIEW ROOMMATES & MATCH %',
+                    style: GoogleFonts.manrope(
+                      color: AppColors.announcementBlue,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(38),
+                    side: BorderSide(
+                      color: AppColors.announcementBlue.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: alreadyApplied
-                    ? null
-                    : () => _apply(seat.id),
+                onPressed: disabled ? null : () => _apply(seat.id),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(40),
-                  backgroundColor: alreadyApplied
-                      ? AppColors.midDark
-                      : AppColors.green,
-                  foregroundColor: alreadyApplied
-                      ? AppColors.silver
-                      : AppColors.nearBlack,
+                  backgroundColor:
+                      disabled ? AppColors.midDark : AppColors.green,
+                  foregroundColor:
+                      disabled ? AppColors.silver : AppColors.nearBlack,
                 ),
-                child: Text(alreadyApplied
-                    ? 'APPLIED'
-                    : 'APPLY FOR SEAT'),
+                child: Text(buttonLabel),
               ),
             ),
           ],

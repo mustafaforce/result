@@ -12,6 +12,7 @@ class AppRoutes {
   static const String applications = '/applications';
   static const String submitReview = '/submit-review';
   static const String adminUsers = '/admin-users';
+  static const String adminFreeSpots = '/admin-free-spots';
 
   const AppRoutes._();
 }

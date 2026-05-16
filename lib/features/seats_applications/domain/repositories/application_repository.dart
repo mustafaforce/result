@@ -8,4 +8,7 @@ abstract class ApplicationRepository {
   });
   Future<List<SeatApplication>> getMyApplications();
   Future<List<SeatApplication>> getApplicationsForMySeats();
+  Future<List<SeatApplication>> getAllApplications({bool pendingOnly = false});
+  Future<bool> hasActiveApplication();
+  Future<List<String>> getMyAppliedSeatIds();
 }
