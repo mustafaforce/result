@@ -52,7 +52,7 @@ class SeatRemoteDataSource {
     final response = await _client
         .from('seat_applications')
         .select('seat_id')
-        .filter('seat_id', 'in', '(${seatIds.join(',')})')
+        .inFilter('seat_id', seatIds)
         .eq('status', 'approved');
 
     final counts = <String, int>{};
@@ -83,7 +83,7 @@ class SeatRemoteDataSource {
     final response = await _client
         .from('user_preferences')
         .select('user_id, is_smoker, is_night_owl, cleanliness_level')
-        .filter('user_id', 'in', '(${userIds.join(',')})');
+        .inFilter('user_id', userIds);
 
     final result = <String, Map<String, dynamic>>{};
     for (final row in (response as List).cast<Map<String, dynamic>>()) {
@@ -99,7 +99,7 @@ class SeatRemoteDataSource {
     final response = await _client
         .from('matching_preferences')
         .select('user_id, study_habit, guest_frequency, noise_tolerance, sleep_time, sharing_preference')
-        .filter('user_id', 'in', '(${userIds.join(',')})');
+        .inFilter('user_id', userIds);
 
     final result = <String, Map<String, dynamic>>{};
     for (final row in (response as List).cast<Map<String, dynamic>>()) {

@@ -11,4 +11,11 @@ class GetApplications {
 
   Future<List<SeatApplication>> forMySeats() =>
       _repository.getApplicationsForMySeats();
+
+  Future<List<SeatApplication>> all({bool pendingOnly = false}) =>
+      _repository.getAllApplications(pendingOnly: pendingOnly);
+
+  Future<bool> hasActive() => _repository.hasActiveApplication();
+
+  Future<List<String>> myAppliedSeatIds() => _repository.getMyAppliedSeatIds();
 }
